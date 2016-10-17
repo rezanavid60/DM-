@@ -35,7 +35,6 @@ def toMDS(data,numberofk):  #对数据进行MDS处理
 	evectsex=evects[:,evalsex]
 	diagvec=diag(sqrt(evalsex))
 	returndata=dot(evectsex,diagvec) #进行点乘得到Dk
-	#print(shape(returndata))
 	return returndata
 
 def toisomap(data):  #对各节点进行k-NN处理
@@ -48,15 +47,11 @@ def toisomap(data):  #对各节点进行k-NN处理
 		distancefinal=[]
 		distancelabeltem=[]
 		for n in range(len(data)):
-			diffmat=array(data[x])-array(data[n])
-			sqdiffmatex=diffmat**2
-			sqdiffmat=array(list(sqdiffmatex))
-			sqdistance=sqdiffmat.sum()
-			distance=sqdistance**0.5
+			distance=linalg.norm(array(data[x])-array(data[n]))
 			closest.append(distance)
 		distancefinal=sorted(closest)
-		temdistance.append(distancefinal[1:7])
-		for i in range(6):
+		temdistance.append(distancefinal[1:11])
+		for i in range(10):
 			distancelabeltem.append(closest.index(distancefinal[i+1]))
 		distancelabel.append(distancelabeltem)
 	return temdistance,distancelabel
@@ -64,7 +59,7 @@ def toisomap(data):  #对各节点进行k-NN处理
 def datagraph(distance,label): #对各节点以及相应的kneighbour连接成图用邻接矩阵的方法表示
 	graphyarray=zeros([len(distance),len(distance)])
 	for x in range(len(graphyarray)):
-		for n in range(6):
+		for n in range(10):
 			graphyarray[x][label[x][n]]=distance[x][n]
 	for i in range(len(graphyarray)):
 		for j in range(len(graphyarray)):

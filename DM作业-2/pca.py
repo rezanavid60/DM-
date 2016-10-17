@@ -1,5 +1,5 @@
 from numpy import *
-def file2matrix(filename):    #读入文档并对文档进行处理
+def file2matrix(filename):  #读入文档并对文档进行处理
 	datalist=[]
 	datalabel=[]
 	datalistex=[]
@@ -13,25 +13,26 @@ def file2matrix(filename):    #读入文档并对文档进行处理
 			datalistex.append(float(filist[x]))
 		datalist.append(datalistex)
 		datalabel.append(float(filist[-1]))
-	return datalist,datalabel   #返回特征集和label集合
+	return datalist,datalabel
 
-def toSVD(data,numberofk):
-	dataU,datasigma,datav=linalg.svd(data)  #应用linalg包进行svd处理
-	selectu=[]
-	for x in dataU:#选择前k列
-		temu=x[:numberofk]
-		selectu.append(temu)
-	selectsigma=datasigma[:numberofk]#选择前k个sigma
-	selectv=datav[:numberofk]#选择前k行
-	finalv=selectv.T
-	return finalv  #返回训练集的投影矩阵
+def toPCA(datalist,numberofk):
+	dataarray = array(datalist)
+	meandataofdata = mean(dataarray,axis=0)
+	dataminusmean = dataarray - meandataofdata
+	stded=dataminusmean/std(dataminusmean,axis=0)
+	covdata = cov(stded,rowvar=0) #对每列求协方差
+	evals,evects=linalg.eig(covdata)
+	evalsex=argsort(evals)   #对特征值从小到大排序
+	evalsex=evalsex[-1:-(numberofk+1):-1]  #取最大的前k个特征值
+	evectsex=evects[:,evalsex]   #取与特征值相应的前k个特征向量
+	return evectsex       #返回训练集的投影矩阵
 
-def judgement(datatrainlist,datatrainlabel,datatestlist):
+def judgement(datatrainlist,datatrainlabel,datatestlist): 
 	testlabel=[]
 	for x in range(len(datatestlist)):
 		closest=[]
 		distancefinal=[]
-		for n in range(len(datatrainlist)):       #利用1-NN求出与待测数据最近的数据
+		for n in range(len(datatrainlist)):   #利用1-NN求出与待测数据最近的数据
 			diffmat=datatestlist[x]-datatrainlist[n]
 			sqdiffmatex=diffmat**2
 			sqdiffmat=array(list(sqdiffmatex))
@@ -39,10 +40,11 @@ def judgement(datatrainlist,datatrainlabel,datatestlist):
 			distance=sqdistance**0.5
 			closest.append(distance)
 		distancefinal=sorted(closest)
-		number=closest.index(distancefinal[0])
-		testlabel.append(datatrainlabel[closest.index(distancefinal[0])])   #取出最近的那个数据的label加入待判断集testlabel
+		number=closest.index(distancefinal[0]) 
+		testlabel.append(datatrainlabel[closest.index(distancefinal[0])])  #取出最近的那个数据的label加入待判断集testlabel
 	return testlabel
-def finalpercentage(testlabel,turelabel):   #将判断集testlabel与标准测试集的label相比较得出准确率
+
+def finalpercentage(testlabel,turelabel):  #将判断集testlabel与标准测试集的label相比较得出准确率
 	truenumber=0
 	for x in range(len(turelabel)):
 		if testlabel[x]==turelabel[x]:
@@ -51,44 +53,46 @@ def finalpercentage(testlabel,turelabel):   #将判断集testlabel与标准测�
 	trueper=truenumber/len(turelabel)
 	return trueper
 
-if __name__ == '__main__': #对相应测试集进行测试
+if __name__ == '__main__':  #对相应测试集进行测试
 	datatrain,labeltrain=file2matrix('datatrain1.txt')
 	datatest,labeltest=file2matrix('datatest1.txt')
-	returndatatrain=dot(datatrain,toSVD(datatrain,10))
-	returndatatest=dot(datatest,toSVD(datatrain,10))
+	returndatatrain=dot(datatrain,toPCA(datatrain,10))
+	returndatatest=dot(datatest,toPCA(datatrain,10))
 	testlabel=judgement(returndatatrain,labeltrain,returndatatest)
 	trueper=finalpercentage(testlabel,labeltest)
 	print('the percentage of data 1 is(k=10):')
 	print(trueper)
-	returndatatrain=dot(datatrain,toSVD(datatrain,20))
-	returndatatest=dot(datatest,toSVD(datatrain,20))
+	returndatatrain=dot(datatrain,toPCA(datatrain,20))
+	returndatatest=dot(datatest,toPCA(datatrain,20))
 	testlabel=judgement(returndatatrain,labeltrain,returndatatest)
 	trueper=finalpercentage(testlabel,labeltest)
 	print('the percentage of data 1 is(k=20):')
 	print(trueper)
-	returndatatrain=dot(datatrain,toSVD(datatrain,30))
-	returndatatest=dot(datatest,toSVD(datatrain,30))
+	returndatatrain=dot(datatrain,toPCA(datatrain,30))
+	returndatatest=dot(datatest,toPCA(datatrain,30))
 	testlabel=judgement(returndatatrain,labeltrain,returndatatest)
 	trueper=finalpercentage(testlabel,labeltest)
 	print('the percentage of data 1 is(k=30):')
 	print(trueper)
 	datatrain,labeltrain=file2matrix('datatrain2.txt')
 	datatest,labeltest=file2matrix('datatest2.txt')
-	returndatatrain=dot(datatrain,toSVD(datatrain,10))
-	returndatatest=dot(datatest,toSVD(datatrain,10))
+	returndatatrain=dot(datatrain,toPCA(datatrain,10))
+	returndatatest=dot(datatest,toPCA(datatrain,10))
 	testlabel=judgement(returndatatrain,labeltrain,returndatatest)
 	trueper=finalpercentage(testlabel,labeltest)
 	print('the percentage of data 2 is(k=10):')
 	print(trueper)
-	returndatatrain=dot(datatrain,toSVD(datatrain,20))
-	returndatatest=dot(datatest,toSVD(datatrain,20))
+	returndatatrain=dot(datatrain,toPCA(datatrain,20))
+	returndatatest=dot(datatest,toPCA(datatrain,20))
 	testlabel=judgement(returndatatrain,labeltrain,returndatatest)
 	trueper=finalpercentage(testlabel,labeltest)
 	print('the percentage of data 2 is(k=20):')
 	print(trueper)
-	returndatatrain=dot(datatrain,toSVD(datatrain,30))
-	returndatatest=dot(datatest,toSVD(datatrain,30))
+	returndatatrain=dot(datatrain,toPCA(datatrain,30))
+	returndatatest=dot(datatest,toPCA(datatrain,30))
 	testlabel=judgement(returndatatrain,labeltrain,returndatatest)
 	trueper=finalpercentage(testlabel,labeltest)
 	print('the percentage of data 2 is(k=30):')
 	print(trueper)
+
+
